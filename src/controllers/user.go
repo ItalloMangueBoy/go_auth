@@ -2,6 +2,7 @@ package controllers
 
 import (
 	database "auth/config"
+
 	"auth/src/models"
 	"auth/src/views"
 	"encoding/json"
@@ -133,7 +134,6 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	updates.Password = string(hash)
-
 
 	// Update user in database
 	if err := database.Conn.Model(&user).Updates(updates).Error; err != nil {

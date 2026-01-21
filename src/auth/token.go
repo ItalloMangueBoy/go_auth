@@ -28,7 +28,13 @@ func GenToken(user models.User) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(secretKey)
+
+	tokenString, err := token.SignedString(secretKey)
+	if err != nil {
+		return "", err
+	}
+
+	return "bearer " + tokenString, nil
 }
 
 func ValidateToken(tokenString string) (*Claims, error) {
