@@ -10,10 +10,12 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	var user models.User
+	database.Conn.Omit("password")
 
 	// Decode body
 	err := json.NewDecoder(r.Body).Decode(&user)
@@ -28,6 +30,15 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Hash password
+	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 12)
+	if err != nil {
+		views.Message(w, http.StatusInternalServerError, "could not hash password")
+		return
+	}
+
+	user.Password = string(hash)
+
 	// Save in database
 	if err := database.Conn.Create(&user).Error; err != nil {
 		views.Message(w, http.StatusInternalServerError, "could not create user")
@@ -35,7 +46,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Send response
-	views.JSON(w, http.StatusCreated, user)
+	views.JSON(w, http.StatusCreated, user.ResponseFormat())
 }
 
 func ListUsers(w http.ResponseWriter, r *http.Request) {
@@ -59,7 +70,7 @@ func ListUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	views.JSON(w, http.StatusOK, users)
+	views.JSON(w, http.StatusOK, models.UsersToResponseFormat(users))
 }
 
 func GetUser(w http.ResponseWriter, r *http.Request) {
@@ -80,7 +91,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Send response
-	views.JSON(w, http.StatusOK, user)
+	views.JSON(w, http.StatusOK, user.ResponseFormat())
 }
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
@@ -114,6 +125,16 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Hash password
+	hash, err := bcrypt.GenerateFromPassword([]byte(updates.Password), 12)
+	if err != nil {
+		views.Message(w, http.StatusInternalServerError, "could not hash password")
+		return
+	}
+
+	updates.Password = string(hash)
+
+
 	// Update user in database
 	if err := database.Conn.Model(&user).Updates(updates).Error; err != nil {
 		views.Message(w, http.StatusInternalServerError, "could not update user")
@@ -127,7 +148,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Send response
-	views.JSON(w, http.StatusOK, user)
+	views.JSON(w, http.StatusOK, user.ResponseFormat())
 }
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {

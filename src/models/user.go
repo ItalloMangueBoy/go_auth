@@ -14,20 +14,47 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at" gorm:"not null"`
 }
 
+type UserResponse struct {
+	ID        uint64    `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 // Format formats User fields for better presentation
-func (a *User) Format() *User {
-	a.Name = helpers.FormatString(a.Name)
-	a.Email = helpers.FormatString(a.Email)
-	a.Password = helpers.FormatString(a.Password)
-	return a
+func (u *User) Format() *User {
+	u.Name = helpers.FormatString(u.Name)
+	u.Email = helpers.FormatString(u.Email)
+	u.Password = helpers.FormatString(u.Password)
+	return u
 }
 
 // Valid returns custom validation error messages for User
-func (a *User) Valid() helpers.ErrorMessages {
+func (u *User) Valid() helpers.ErrorMessages {
 	customMessages := helpers.ErrorMessages{
 		"User.Name.required":     "Name is required",
 		"User.Email.required":    "Email is required",
 		"User.Password.required": "Password is required",
 	}
-	return helpers.ValidateStruct(a, customMessages)
+	return helpers.ValidateStruct(u, customMessages)
+}
+
+// ResponseFormat returns a map representation of User without sensitive fields
+func (u *User) ResponseFormat() UserResponse {
+	return UserResponse{
+		ID:    u.ID,
+		Name:  u.Name,
+		Email: u.Email,
+	}
+}
+
+// UsersToResponseFormat converts a slice of User to a slice of UserResponse
+func UsersToResponseFormat(users []User) []UserResponse {
+	formatted := make([]UserResponse, len(users))
+	for i, user := range users {
+		formatted[i] = user.ResponseFormat()
+	}
+
+	return formatted
 }

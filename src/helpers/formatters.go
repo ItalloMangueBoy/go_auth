@@ -1,6 +1,8 @@
 package helpers
 
-import "strings"
+import (
+	"strings"
+)
 
 // FormatString formats a string to a more readable format
 func FormatString(str string) string {
